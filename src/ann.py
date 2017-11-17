@@ -2,13 +2,22 @@
 
 # Barebones ANN implementation for predicting guilt
 
-# Input units: 23
-# Output units: 1
-# Hidden layers: 1
-# Hidden unts/layer: 23
 
-import math
+import math, copy
+from collections import namedtuple
 import numpy as np
+
+INPUT_UNITS = 2
+OUTPUT_UNITS = 1
+# Hidden layers: 1
+HIDDEN_UNITS = INPUT_UNITS
+class Net(namedtuple('Net', ['input', 'hidden', 'output'])):
+    @staticmethod
+    def empty(input=np.zeros(INPUT_UNITS + 1)):
+        return Net(input=input,
+                   hidden=np.zeros(HIDDEN_UNITS + 1),
+                   output=np.zeros(OUTPUT_UNITS))
+
 
 def sigmoid_value(x):
     return 1.0/(1.0 + math.exp(-x))
@@ -24,6 +33,18 @@ def sigmoid(x):
 def h(theta, x):
     return sigmoid(x.dot(theta))
 
-# Vector[n] Matrix[1xn] -> List[List[input]]
+# calc_unit_outputs: Theta Sample -> Net
+# Theta: List[np.matrix[2x3]]
+# Sample:
 def calc_unit_outputs(theta, x):
-    
+    x_with_bias = np.append([1], x)
+    assert(x.size == INPUT_UNITS)
+    filled = Net.empty(input=x_with_bias)
+    for h_i in range(filled.hidden.size - 1):
+        filled.hidden[h_i] = h(theta[0][h_i,:].T, filled.input)
+        # for i in range(filled.input.size):
+        #     filled.hidden[h] += filled.input[i]*theta[i]
+    for o_i in range(filled.output.size - 1):
+        filled.output[o_i] = h(theta[1][o_i,:].T, filled.hidden)
+
+    return filled
