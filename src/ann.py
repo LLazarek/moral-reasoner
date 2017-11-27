@@ -13,9 +13,11 @@ OUTPUT_UNITS = 1
 HIDDEN_UNITS = INPUT_UNITS
 class Net(namedtuple('Net', ['input', 'hidden', 'output'])):
     @staticmethod
-    def empty(input=np.zeros(INPUT_UNITS + 1)):
-        return Net(input=input,
-                   hidden=np.zeros(HIDDEN_UNITS + 1),
+    def empty(input=np.zeros(INPUT_UNITS)):
+        input_with_bias = np.append([1], input)
+        hidden_with_bias = np.append([1], np.zeros(HIDDEN_UNITS))
+        return Net(input=input_with_bias,
+                   hidden=hidden_with_bias,
                    output=np.zeros(OUTPUT_UNITS))
 
 
@@ -31,20 +33,26 @@ def sigmoid(x):
 # theta: n x 1
 # x: m x n
 def h(theta, x):
-    return sigmoid(x.dot(theta))
+    # return sigmoid(x.dot(theta))
+    print(theta)
+    print(x)
+    return x.dot(theta)
 
 # calc_unit_outputs: Theta Sample -> Net
 # Theta: List[np.matrix[2x3]]
-# Sample:
+# Implements forward propogation to calculate the activations of every unit
+# in the net
 def calc_unit_outputs(theta, x):
-    x_with_bias = np.append([1], x)
     assert(x.size == INPUT_UNITS)
-    filled = Net.empty(input=x_with_bias)
-    for h_i in range(filled.hidden.size - 1):
-        filled.hidden[h_i] = h(theta[0][h_i,:].T, filled.input)
+    x_with_bias = np.append([1], x)
+    filled = Net.empty(input=x)
+    for h_i in range(1, filled.hidden.size):
+        filled.hidden[h_i] = h(theta[0][h_i - 1,:].T, filled.input)
         # for i in range(filled.input.size):
         #     filled.hidden[h] += filled.input[i]*theta[i]
-    for o_i in range(filled.output.size - 1):
-        filled.output[o_i] = h(theta[1][o_i,:].T, filled.hidden)
+    for o_i in range(filled.output.size):
+        filled.output[o_i] = h(theta[1][o_i - 1,:].T, filled.hidden)
 
     return filled
+
+
