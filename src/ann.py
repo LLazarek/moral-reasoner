@@ -13,6 +13,7 @@ OUTPUT_UNITS = 1
 HIDDEN_UNITS = INPUT_UNITS
 UNITS_IN_LAYER = [2, 2, 1]
 LAMBDA = 0.0001
+ALPHA = 0.2
 class Net(namedtuple('Net', ['input', 'hidden', 'output'])):
     @staticmethod
     def empty(input=np.zeros(INPUT_UNITS)):
@@ -75,45 +76,84 @@ def cost(theta, X, y):
 
     return cost + regularizer
 
-def calc_unit_deltas(activations, output_deltas):
+def calc_hidden_deltas(theta, activations, output_deltas):
     deltas = Net.empty()
     deltas = np.matrix([deltas.input, deltas.hidden, output_deltas])
-    # layers in reverse order
-    for l in range(len(activations) - 1, 0, -1):
-        deltas[l] = theta[l - 1].T.dot(deltas[l]) * \
-                    activations[l] * (1 - activations[l])
-
-    return deltas
+    # Since there is only one hidden layer, just do that one
+    return np.multiply(theta[1].T.dot(output_deltas),
+                       np.multiply(activations.hidden,
+                                   1 - activations.hidden))
 
 # returns the partial derivatives of the cost function wrt THETA
 def backprop(theta, X, y):
     L = len(theta)
     m = len(y)
 
-    Delta = Net.empty()
-    Delta = np.matrix([Delta.input, Delta.hidden, Delta.output])
+    # Delta and theta have the same shape
+    Delta = [np.zeros(UNITS_IN_LAYER[1]*(UNITS_IN_LAYER[0] + 1))\
+             .reshape(UNITS_IN_LAYER[1], UNITS_IN_LAYER[0] + 1),
+             np.zeros(UNITS_IN_LAYER[2]*(UNITS_IN_LAYER[1] + 1))\
+             .reshape(UNITS_IN_LAYER[2], UNITS_IN_LAYER[1] + 1)]
     for i in range(m):
+        # forward propagation
         activations = calc_unit_outputs(theta, X[i])
+
         output_deltas = activations.output - y[i]
-        deltas = calc_unit_deltas(activations, output_deltas)
+        hidden_deltas = calc_hidden_deltas(theta, activations, output_deltas)
 
-        for l in range(L):
-            Delta[l] = Delta[l] + deltas[l+1].dot(activations[l].T)
+        Delta[1] += np.multiply(activations.hidden, output_deltas)
+        Delta[0] += np.multiply(activations.input, hidden_deltas)
 
-    D = Net.empty()
-    for l in range(L):
-        for i in range(UNITS_IN_LAYER[l]):
-            for j in range(UNITS_IN_LAYER[l+1]):
-                D[l][j,i] = Delta[l][j,i]
-                if j != 0: # not the bias unit
-                    D[l][j,i] += LAMBDA*theta[l][j,i]
-
-                D[l][j,i] /= m
+    D = Delta
+    D[0] = D[0]/m + LAMBDA*theta[0]
+    D[1] = D[1]/m + LAMBDA*theta[1]
 
     return D
 
-# TODO
-# - Implement gradient checking
-# - Verify backprop working
-# - Implement gradient descent to optimize theta
-# - Train ann
+def gradient_descent(theta, X, y):
+    converged = lambda c, last: abs(c - last) < 0.0001
+
+    curr_theta = copy.deepcopy(theta)
+    curr_cost = cost(curr_theta, X, y)
+    last_cost = 10000
+
+    while not converged(curr_cost, last_cost):
+        partials = backprop(curr_theta, X, y)
+        temp_theta = copy.deepcopy(curr_theta)
+
+        for l in range(2):
+            for i in range(UNITS_IN_LAYER[l + 1]):
+                for j in range(UNITS_IN_LAYER[l]):
+                    temp_theta[l][i,j] -= ALPHA*partials[l][i,j]
+
+
+        curr_theta = temp_theta
+
+        last_cost = curr_cost
+        curr_cost = cost(curr_theta, X, y)
+
+    return curr_theta
+
+def train():
+    y = np.array([[1],
+                  [0],
+                  [0],
+                  [0],
+                  [1]])
+    X = np.array([[5, 6],
+                  [-1, 3],
+                  [-5, -2],
+                  [-3, 2],
+                  [4, -1]])
+    np.random.seed(1)
+    theta = [np.random.random((2, 3)) - 0.5,
+             np.random.random((1, 3)) - 0.5]
+    optimized_theta = gradient_descent(theta, X, y)
+
+    correct = 0
+    for (i, y_i) in enumerate(y):
+        output = calc_unit_outputs(theta, X[i]).output
+        if int(round(output)) == y_i:
+            correct += 1
+
+    print("training accuracy: {}".format(float(correct)/len(y)))
