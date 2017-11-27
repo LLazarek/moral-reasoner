@@ -47,6 +47,10 @@ def to_matrix(json_data):
                          factor[0] != "verdict" and factor[0] != "caseId",
                          items)
         # insert verdict into y
+        if not "verdict" in case:
+            print("WARNING: verdict not found in case: {}. Aborting..."\
+                  .format(case["caseId"]))
+            exit(1)
         y.append([case["verdict"]])
         # Sort list by factor so that all Xs are consistent
         sorted_factors = sorted(factors, key=lambda item: item[0])

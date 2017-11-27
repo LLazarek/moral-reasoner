@@ -54,7 +54,7 @@
 	"sufficient_for_harm":"y"
     },
     {
-	"caseId":"verdict",
+	"verdict":"guilty",
 	"caseId":"p2",
 	"sufficient_for_harm":"y",
 	"plan_known":"n",
