@@ -6,12 +6,13 @@
 import math, copy
 from collections import namedtuple
 import numpy as np
+import parser
 
-INPUT_UNITS = 3 # 24
+INPUT_UNITS = 23
 OUTPUT_UNITS = 1
 # Hidden layers: 1
 HIDDEN_UNITS = INPUT_UNITS
-UNITS_IN_LAYER = [3, 3, 1]
+UNITS_IN_LAYER = [23, 23, 1]
 LAMBDA = 0.0001
 ALPHA = 0.2
 class Net(namedtuple('Net', ['input', 'hidden', 'output'])):
@@ -140,6 +141,9 @@ def train(X, y):
              np.random.random((1, len(X[0]) + 1)) - 0.5]
     optimized_theta = gradient_descent(theta, X, y)
 
+    return optimized_theta
+
+def test(theta, X, y):
     correct = 0
     for (i, y_i) in enumerate(y):
         output = calc_unit_outputs(theta, X[i]).output
@@ -148,17 +152,9 @@ def train(X, y):
 
     print("training accuracy: {}".format(float(correct)/len(y)))
 
-
 def main():
-    y = np.array([[1],
-                  [0],
-                  [0],
-                  [0],
-                  [1]])
-    X = np.array([[5, 6, 2],
-                  [-1, 3, -1],
-                  [-5, -2, -10],
-                  [-3, 2, -5],
-                  [4, -1, 3]])
-    train(X, y)
+    (X_train, y_train) = parser.load_training()
+    (X_test, y_test) = parser.load_test()
+    theta = train(X_train, y_train)
+    test(theta, X_test, y_test)
 
