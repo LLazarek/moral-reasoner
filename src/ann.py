@@ -77,7 +77,7 @@ def cost(theta, X, y):
 
 def calc_unit_deltas(activations, output_deltas):
     deltas = Net.empty()
-    deltas.output = output_deltas
+    deltas = np.matrix([deltas.input, deltas.hidden, output_deltas])
     # layers in reverse order
     for l in range(len(activations) - 1, 0, -1):
         deltas[l] = theta[l - 1].T.dot(deltas[l]) * \
@@ -91,6 +91,7 @@ def backprop(theta, X, y):
     m = len(y)
 
     Delta = Net.empty()
+    Delta = np.matrix([Delta.input, Delta.hidden, Delta.output])
     for i in range(m):
         activations = calc_unit_outputs(theta, X[i])
         output_deltas = activations.output - y[i]
