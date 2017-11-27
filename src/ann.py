@@ -7,11 +7,11 @@ import math, copy
 from collections import namedtuple
 import numpy as np
 
-INPUT_UNITS = 2
+INPUT_UNITS = 3 # 24
 OUTPUT_UNITS = 1
 # Hidden layers: 1
 HIDDEN_UNITS = INPUT_UNITS
-UNITS_IN_LAYER = [2, 2, 1]
+UNITS_IN_LAYER = [3, 3, 1]
 LAMBDA = 0.0001
 ALPHA = 0.2
 class Net(namedtuple('Net', ['input', 'hidden', 'output'])):
@@ -134,20 +134,10 @@ def gradient_descent(theta, X, y):
 
     return curr_theta
 
-def train():
-    y = np.array([[1],
-                  [0],
-                  [0],
-                  [0],
-                  [1]])
-    X = np.array([[5, 6],
-                  [-1, 3],
-                  [-5, -2],
-                  [-3, 2],
-                  [4, -1]])
+def train(X, y):
     np.random.seed(1)
-    theta = [np.random.random((2, 3)) - 0.5,
-             np.random.random((1, 3)) - 0.5]
+    theta = [np.random.random((len(X[0]), len(X[0]) + 1)) - 0.5,
+             np.random.random((1, len(X[0]) + 1)) - 0.5]
     optimized_theta = gradient_descent(theta, X, y)
 
     correct = 0
@@ -157,3 +147,18 @@ def train():
             correct += 1
 
     print("training accuracy: {}".format(float(correct)/len(y)))
+
+
+def main():
+    y = np.array([[1],
+                  [0],
+                  [0],
+                  [0],
+                  [1]])
+    X = np.array([[5, 6, 2],
+                  [-1, 3, -1],
+                  [-5, -2, -10],
+                  [-3, 2, -5],
+                  [4, -1, 3]])
+    train(X, y)
+
