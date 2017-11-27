@@ -66,7 +66,7 @@ def cost(theta, X, y):
     cost /= -m
 
     regularizer = 0
-    for l in range(2):
+    for l in range(len(theta)):
         for i in range(UNITS_IN_LAYER[l]):
             for j in range(UNITS_IN_LAYER[l+1]):
                 regularizer += theta[l][j,i]**2
@@ -74,3 +74,45 @@ def cost(theta, X, y):
     regularizer *= LAMBDA/(2*m)
 
     return cost + regularizer
+
+def calc_unit_deltas(activations, output_deltas):
+    deltas = Net.empty()
+    deltas.output = output_deltas
+    # layers in reverse order
+    for l in range(len(activations) - 1, 0, -1):
+        deltas[l] = theta[l - 1].T.dot(deltas[l]) * \
+                    activations[l] * (1 - activations[l])
+
+    return deltas
+
+# returns the partial derivatives of the cost function wrt THETA
+def backprop(theta, X, y):
+    L = len(theta)
+    m = len(y)
+
+    Delta = Net.empty()
+    for i in range(m):
+        activations = calc_unit_outputs(theta, X[i])
+        output_deltas = activations.output - y[i]
+        deltas = calc_unit_deltas(activations, output_deltas)
+
+        for l in range(L):
+            Delta[l] = Delta[l] + deltas[l+1].dot(activations[l].T)
+
+    D = Net.empty()
+    for l in range(L):
+        for i in range(UNITS_IN_LAYER[l]):
+            for j in range(UNITS_IN_LAYER[l+1]):
+                D[l][j,i] = Delta[l][j,i]
+                if j != 0: # not the bias unit
+                    D[l][j,i] += LAMBDA*theta[l][j,i]
+
+                D[l][j,i] /= m
+
+    return D
+
+# TODO
+# - Implement gradient checking
+# - Verify backprop working
+# - Implement gradient descent to optimize theta
+# - Train ann
