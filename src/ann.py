@@ -27,17 +27,24 @@ class Net(namedtuple('Net', ['input', 'hidden', 'output'])):
 
 def sigmoid_value(x):
     return 1.0/(1.0 + math.exp(-x))
+def tanh_value(x):
+    return (math.tanh(x) + 1)/2
 
 sigmoid_matrix = np.vectorize(sigmoid_value)
+tanh_matrix = np.vectorize(tanh_value)
 
 def sigmoid(x):
     return sigmoid_matrix(x) if isinstance(x, np.matrix) \
         else sigmoid_value(x)
+def tanh(x):
+    return tanh_matrix(x) if isinstance(x, np.matrix) \
+        else tanh_value(x)
 
 # theta: n x 1
 # x: m x n
 def h(theta, x):
-    return sigmoid(x.dot(theta))
+    # return sigmoid(x.dot(theta))
+    return tanh(x.dot(theta))
 
 # calc_unit_outputs: Theta Sample -> Net
 # Theta: List[np.matrix[2x3]]
@@ -82,7 +89,8 @@ def calc_hidden_deltas(theta, activations, output_deltas):
     # Since there is only one hidden layer, just do that one
     return np.multiply(theta[1].T.dot(output_deltas),
                        np.multiply(activations.hidden,
-                                   1 - activations.hidden))
+                                   1 - np.multiply(activations.hidden,
+                                                   activations.hidden)))
 
 # returns the partial derivatives of the cost function wrt THETA
 def backprop(theta, X, y):
