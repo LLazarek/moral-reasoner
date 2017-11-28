@@ -25,7 +25,6 @@ class Net(namedtuple('Net', ['input', 'hidden', 'output'])):
                    output=np.zeros(OUTPUT_UNITS))
 
 
-# try tanh, or other activations
 def sigmoid_value(x):
     return 1.0/(1.0 + math.exp(-x))
 
@@ -50,8 +49,7 @@ def calc_unit_outputs(theta, x):
     filled = Net.empty(input=x)
     for h_i in range(1, filled.hidden.size):
         filled.hidden[h_i] = h(theta[0][h_i - 1,:].T, filled.input)
-        # for i in range(filled.input.size):
-        #     filled.hidden[h] += filled.input[i]*theta[i]
+
     for o_i in range(filled.output.size):
         filled.output[o_i] = h(theta[1][o_i - 1,:].T, filled.hidden)
 
