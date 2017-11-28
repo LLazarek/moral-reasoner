@@ -2,6 +2,7 @@
 
 import json
 import numpy as np
+from random import shuffle
 
 def load(path):
     with open(path, 'r') as f:
@@ -58,4 +59,6 @@ def to_matrix(json_data):
         values = map(lambda item: item[1], sorted_factors)
         X.append(values)
 
+    shuffle(X)
+    shuffle(y)
     return (np.array(X), np.array(y))
