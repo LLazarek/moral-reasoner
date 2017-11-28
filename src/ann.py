@@ -25,6 +25,7 @@ class Net(namedtuple('Net', ['input', 'hidden', 'output'])):
                    output=np.zeros(OUTPUT_UNITS))
 
 
+# try tanh, or other activations
 def sigmoid_value(x):
     return 1.0/(1.0 + math.exp(-x))
 
@@ -153,8 +154,10 @@ def test(theta, X, y):
     print("training accuracy: {}".format(float(correct)/len(y)))
 
 def main():
+    print("Loading data...")
     (X_train, y_train) = parser.load_training()
     (X_test, y_test) = parser.load_test()
+    print("Training...")
     theta = train(X_train, y_train)
     test(theta, X_test, y_test)
 

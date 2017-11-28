@@ -56,7 +56,6 @@ def to_matrix(json_data):
         sorted_factors = sorted(factors, key=lambda item: item[0])
         # Map list into list of value, insert into X
         values = map(lambda item: item[1], sorted_factors)
-        print(values)
         X.append(values)
 
     return (np.array(X), np.array(y))
