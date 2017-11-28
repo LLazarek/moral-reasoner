@@ -8,6 +8,7 @@ from collections import namedtuple
 import numpy as np
 import parser
 
+CHECK_GRADIENT = True
 INPUT_UNITS = 23
 OUTPUT_UNITS = 1
 # Hidden layers: 1
@@ -111,7 +112,7 @@ def backprop(theta, X, y):
     return D
 
 def gradient_descent(theta, X, y):
-    converged = lambda c, last: abs(c - last) < 0.0001
+    converged = lambda c, last: abs(c - last) < 0.0000001
 
     curr_theta = copy.deepcopy(theta)
     curr_cost = cost(curr_theta, X, y)
@@ -119,6 +120,10 @@ def gradient_descent(theta, X, y):
 
     while not converged(curr_cost, last_cost):
         partials = backprop(curr_theta, X, y)
+
+        if CHECK_GRADIENT:
+            gradient_check(partials, curr_theta, X, y)
+
         temp_theta = copy.deepcopy(curr_theta)
 
         for l in range(2):
@@ -133,6 +138,25 @@ def gradient_descent(theta, X, y):
         curr_cost = cost(curr_theta, X, y)
 
     return curr_theta
+
+def gradient_check(partials, theta, X, y):
+    epsilon = 0.0001
+    approx_eq = lambda a, b: abs(a - b) < 0.000001
+    for l in range(len(theta)):
+        (rows, cols) = theta[l].shape
+        for i in range(rows):
+            for j in range(cols):
+                temp_theta_plus_e = copy.deepcopy(theta)
+                temp_theta_plus_e[l][i,j] += epsilon
+                cost_plus_e = cost(temp_theta_plus_e, X, y)
+                temp_theta_minus_e = copy.deepcopy(theta)
+                temp_theta_minus_e[l][i,j] -= epsilon
+                cost_minus_e = cost(temp_theta_minus_e, X, y)
+                gradient = (cost_plus_e - cost_minus_e)/(2*epsilon)
+                partial = partials[l][i,j]
+                if not approx_eq(partial, gradient):
+                    print("Gradient checking failed! partial {} !~= {}"\
+                          .format(partial, gradient))
 
 def train(X, y):
     np.random.seed(1)
@@ -158,4 +182,3 @@ def main():
     print("Training...")
     theta = train(X_train, y_train)
     test(theta, X_test, y_test)
-
