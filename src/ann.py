@@ -9,12 +9,12 @@ import numpy as np
 import parser
 
 CHECK_GRADIENT = True
-INPUT_UNITS = 23
+INPUT_UNITS = 3
 OUTPUT_UNITS = 1
 # Hidden layers: 1
 HIDDEN_UNITS = INPUT_UNITS
-UNITS_IN_LAYER = [23, 23, 1]
-LAMBDA = 0.0001
+UNITS_IN_LAYER = [3, 3, 1]
+LAMBDA = 0.2
 ALPHA = 0.2
 class Net(namedtuple('Net', ['input', 'hidden', 'output'])):
     @staticmethod
@@ -44,7 +44,7 @@ def h(theta, x):
 # Theta: List[np.matrix[2x3]]
 # Implements forward propogation to calculate the activations of every unit
 # in the net
-def calc_unit_outputs(theta, x):
+def calc_unit_outputs(theta, x): # Verified
     assert(x.size == INPUT_UNITS)
     x_with_bias = np.append([1], x)
     filled = Net.empty(input=x)
@@ -52,11 +52,11 @@ def calc_unit_outputs(theta, x):
         filled.hidden[h_i] = h(theta[0][h_i - 1,:].T, filled.input)
 
     for o_i in range(filled.output.size):
-        filled.output[o_i] = h(theta[1][o_i - 1,:].T, filled.hidden)
+        filled.output[o_i] = h(theta[1][o_i,:].T, filled.hidden)
 
     return filled
 
-def cost(theta, X, y):
+def cost(theta, X, y): # Verified
     m = len(y)
     cost = 0
     for i in range(m):
@@ -68,22 +68,20 @@ def cost(theta, X, y):
     cost /= -m
 
     regularizer = 0
-    for l in range(len(theta)):
-        for i in range(UNITS_IN_LAYER[l]):
-            for j in range(UNITS_IN_LAYER[l+1]):
-                regularizer += theta[l][j,i]**2
+    for layer_theta in theta:
+        squared = np.multiply(layer_theta, layer_theta)
+        regularizer += np.sum(squared)
 
     regularizer *= LAMBDA/(2*m)
 
     return cost + regularizer
 
-def calc_hidden_deltas(theta, activations, output_deltas):
-    deltas = Net.empty()
-    deltas = np.matrix([deltas.input, deltas.hidden, output_deltas])
+def calc_hidden_deltas(theta, activations, output_deltas): # Verified
     # Since there is only one hidden layer, just do that one
+    g_prime = np.multiply(activations.hidden, 1 - activations.hidden)
+    g_prime[0] = 1 # Otherwise bias always goes to 0
     return np.multiply(theta[1].T.dot(output_deltas),
-                       np.multiply(activations.hidden,
-                                   1 - activations.hidden))
+                       g_prime)
 
 # returns the partial derivatives of the cost function wrt THETA
 def backprop(theta, X, y):
@@ -98,16 +96,33 @@ def backprop(theta, X, y):
     for i in range(m):
         # forward propagation
         activations = calc_unit_outputs(theta, X[i])
+        print("activations: {}".format(activations))
 
         output_deltas = activations.output - y[i]
+        output_deltas = np.multiply(output_deltas,
+                                    np.multiply(activations.output,
+                                                1 - activations.output)) # Verif
+        print("o delta: {}".format(output_deltas))
+        
         hidden_deltas = calc_hidden_deltas(theta, activations, output_deltas)
+        print("hidden deltas: {}".format(hidden_deltas))
 
-        Delta[1] += np.multiply(activations.hidden, output_deltas)
-        Delta[0] += np.multiply(activations.input, hidden_deltas)
+        gradient_wrt_weight_1 = np.multiply(activations.hidden, output_deltas)
+        gradient_wrt_weight_1[0] = output_deltas[0]
+        Delta[1] += gradient_wrt_weight_1
+
+        gradient_wrt_weight_2 = np.multiply(activations.input, hidden_deltas)
+        gradient_wrt_weight_2[0] = hidden_deltas[0]
+        Delta[0] += gradient_wrt_weight_2
 
     D = Delta
-    D[0] = D[0]/m + LAMBDA*theta[0]
-    D[1] = D[1]/m + LAMBDA*theta[1]
+    tmp_theta_0 = theta[0]
+    tmp_theta_0[:,1] = 0
+    tmp_theta_1 = theta[1]
+    tmp_theta_1[:,1] = 0
+    
+    D[0] = D[0]/m + LAMBDA*tmp_theta_0
+    D[1] = D[1]/m + LAMBDA*tmp_theta_1
 
     return D
 
@@ -123,6 +138,7 @@ def gradient_descent(theta, X, y):
 
         if CHECK_GRADIENT:
             gradient_check(partials, curr_theta, X, y)
+            exit(1)
 
         temp_theta = copy.deepcopy(curr_theta)
 
@@ -155,13 +171,14 @@ def gradient_check(partials, theta, X, y):
                 gradient = (cost_plus_e - cost_minus_e)/(2*epsilon)
                 partial = partials[l][i,j]
                 if not approx_eq(partial, gradient):
-                    print("Gradient checking failed! partial {} !~= {}"\
-                          .format(partial, gradient))
+                    print("Gradient check failed! for layer {}, weight {},{}; "
+                          "partial {} !~= {}"\
+                          .format(l, i, j, partial, gradient))
 
 def train(X, y):
     np.random.seed(1)
     theta = [np.random.random((len(X[0]), len(X[0]) + 1)) - 0.5,
-             np.random.random((1, len(X[0]) + 1)) - 0.5]
+             np.random.random((1,         len(X[0]) + 1)) - 0.5]
     optimized_theta = gradient_descent(theta, X, y)
 
     return optimized_theta
