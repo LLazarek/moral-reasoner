@@ -14,7 +14,7 @@ OUTPUT_UNITS = 1
 # Hidden layers: 1
 HIDDEN_UNITS = INPUT_UNITS
 UNITS_IN_LAYER = [3, 3, 1]
-LAMBDA = 0.2
+LAMBDA = 0#.2
 ALPHA = 0.2
 class Net(namedtuple('Net', ['input', 'hidden', 'output'])):
     @staticmethod
@@ -102,23 +102,24 @@ def backprop(theta, X, y):
         output_deltas = np.multiply(output_deltas,
                                     np.multiply(activations.output,
                                                 1 - activations.output)) # Verif
+        # output_deltas = np.matrix(output_deltas)
         print("o delta: {}".format(output_deltas))
         
         hidden_deltas = calc_hidden_deltas(theta, activations, output_deltas)
         print("hidden deltas: {}".format(hidden_deltas))
 
-        gradient_wrt_weight_1 = np.multiply(activations.hidden, output_deltas)
-        gradient_wrt_weight_1[0] = output_deltas[0]
-        Delta[1] += gradient_wrt_weight_1
+        Delta[1] += output_deltas.dot(np.matrix(activations.hidden)) # Verified
 
-        gradient_wrt_weight_2 = np.multiply(activations.input, hidden_deltas)
-        gradient_wrt_weight_2[0] = hidden_deltas[0]
-        Delta[0] += gradient_wrt_weight_2
+        hidden_deltas_minus_bias = hidden_deltas[0,1:]
+        Delta[0] += hidden_deltas_minus_bias.T.dot(np.matrix(activations.input)) # Verified
+        print(Delta)
 
     D = Delta
-    tmp_theta_0 = theta[0]
+
+    # make lambda multiply to 0 for bias weights
+    tmp_theta_0 = copy.deepcopy(theta[0])
     tmp_theta_0[:,1] = 0
-    tmp_theta_1 = theta[1]
+    tmp_theta_1 = copy.deepcopy(theta[1])
     tmp_theta_1[:,1] = 0
     
     D[0] = D[0]/m + LAMBDA*tmp_theta_0
@@ -134,10 +135,12 @@ def gradient_descent(theta, X, y):
     last_cost = 10000
 
     while not converged(curr_cost, last_cost):
+        print("DOING BACKPROP")
         partials = backprop(curr_theta, X, y)
 
         if CHECK_GRADIENT:
             gradient_check(partials, curr_theta, X, y)
+            print("EXITING...\n\n")
             exit(1)
 
         temp_theta = copy.deepcopy(curr_theta)
