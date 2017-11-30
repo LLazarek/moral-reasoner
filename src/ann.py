@@ -9,21 +9,18 @@ import numpy as np
 import parser
 
 CHECK_GRADIENT = True
-INPUT_UNITS = 3
-OUTPUT_UNITS = 1
 # Hidden layers: 1
-HIDDEN_UNITS = INPUT_UNITS
-UNITS_IN_LAYER = [3, 3, 1]
-LAMBDA = 0#.2
+UNITS_IN_LAYER = [23, 23, 1]
+LAMBDA = 0.#001
 ALPHA = 0.2
 class Net(namedtuple('Net', ['input', 'hidden', 'output'])):
     @staticmethod
-    def empty(input=np.zeros(INPUT_UNITS)):
+    def empty(input=np.zeros(UNITS_IN_LAYER[0])):
         input_with_bias = np.append([1], input)
-        hidden_with_bias = np.append([1], np.zeros(HIDDEN_UNITS))
+        hidden_with_bias = np.append([1], np.zeros(UNITS_IN_LAYER[1]))
         return Net(input=input_with_bias,
                    hidden=hidden_with_bias,
-                   output=np.zeros(OUTPUT_UNITS))
+                   output=np.zeros(UNITS_IN_LAYER[-1]))
 
 
 def sigmoid_value(x):
@@ -45,7 +42,7 @@ def h(theta, x):
 # Implements forward propogation to calculate the activations of every unit
 # in the net
 def calc_unit_outputs(theta, x): # Verified
-    assert(x.size == INPUT_UNITS)
+    assert(x.size == UNITS_IN_LAYER[0])
     x_with_bias = np.append([1], x)
     filled = Net.empty(input=x)
     for h_i in range(1, filled.hidden.size):
@@ -60,7 +57,7 @@ def cost(theta, X, y): # Verified
     m = len(y)
     cost = 0
     for i in range(m):
-        for k in range(OUTPUT_UNITS):
+        for k in range(UNITS_IN_LAYER[-1]):
             h_theta_x = calc_unit_outputs(theta, X[i]).output[k]
             cost += y[i][k]*math.log(h_theta_x) + \
                     (1 - y[i][k])*math.log(1 - h_theta_x)
@@ -96,23 +93,23 @@ def backprop(theta, X, y):
     for i in range(m):
         # forward propagation
         activations = calc_unit_outputs(theta, X[i])
-        print("activations: {}".format(activations))
+        # print("activations: {}".format(activations))
 
         output_deltas = activations.output - y[i]
         output_deltas = np.multiply(output_deltas,
                                     np.multiply(activations.output,
                                                 1 - activations.output)) # Verif
-        # output_deltas = np.matrix(output_deltas)
-        print("o delta: {}".format(output_deltas))
+        output_deltas = np.matrix(output_deltas)
+        # print("o delta: {}".format(output_deltas))
         
         hidden_deltas = calc_hidden_deltas(theta, activations, output_deltas)
-        print("hidden deltas: {}".format(hidden_deltas))
+        # print("hidden deltas: {}".format(hidden_deltas))
 
         Delta[1] += output_deltas.dot(np.matrix(activations.hidden)) # Verified
 
         hidden_deltas_minus_bias = hidden_deltas[0,1:]
         Delta[0] += hidden_deltas_minus_bias.T.dot(np.matrix(activations.input)) # Verified
-        print(Delta)
+        # print(Delta)
 
     D = Delta
 
@@ -128,15 +125,27 @@ def backprop(theta, X, y):
     return D
 
 def gradient_descent(theta, X, y):
-    converged = lambda c, last: abs(c - last) < 0.0000001
+    converged = lambda c, last: abs(c - last) < 0.000001
 
     curr_theta = copy.deepcopy(theta)
     curr_cost = cost(curr_theta, X, y)
     last_cost = 10000
 
+    count = 0
+    REPORT_FREQUENCY = 1000
+
     while not converged(curr_cost, last_cost):
-        print("DOING BACKPROP")
+        if not curr_cost < last_cost:
+            print("ERROR: cost not going down")
+            exit(1)
+
+        count = (count + 1)%REPORT_FREQUENCY
+        if count == 0:
+            print("Iteration")
+            print(curr_cost)
+        # print("DOING BACKPROP")
         partials = backprop(curr_theta, X, y)
+        # print(partials)
 
         if CHECK_GRADIENT:
             gradient_check(partials, curr_theta, X, y)
@@ -159,8 +168,8 @@ def gradient_descent(theta, X, y):
     return curr_theta
 
 def gradient_check(partials, theta, X, y):
-    epsilon = 0.0001
-    approx_eq = lambda a, b: abs(a - b) < 0.000001
+    epsilon = 0.0000000001
+    approx_eq = lambda a, b: abs(a - b) < 0.0001
     for l in range(len(theta)):
         (rows, cols) = theta[l].shape
         for i in range(rows):
