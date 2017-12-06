@@ -15,6 +15,8 @@ CHECK_GRADIENT = False
 UNITS_IN_LAYER = [23, 23, 1]
 LAMBDA = 0.001#001
 ALPHA = 0.1
+CONVERGENCE_THRESHOLD = 0.000001
+
 class Net(namedtuple('Net', ['input', 'hidden', 'output'])):
     @staticmethod
     def empty(input=np.zeros((1, UNITS_IN_LAYER[0]))):
@@ -144,7 +146,7 @@ def backprop(theta, X, y):
     return D
 
 def gradient_descent(theta, X, y):
-    converged = lambda c, last: abs(c - last) < 0.000001
+    converged = lambda c, last: abs(c - last) < CONVERGENCE_THRESHOLD
 
     curr_theta = copy.deepcopy(theta)
     curr_cost = cost(curr_theta, X, y)
@@ -224,6 +226,7 @@ def test(theta, X, y, name):
     print("{} accuracy: {}".format(name, float(correct)/len(y)))
 
 def main():
+    global ALPHA, CONVERGENCE_THRESHOLD
     print("Loading data...")
     (X_train, y_train) = parser.load_training()
     (X_test, y_test) = parser.load_test()
@@ -234,3 +237,5 @@ def main():
         print("\nEpoch {}".format(i))
         test(theta, X_train, y_train, "training")
         test(theta, X_test, y_test, "test")
+        ALPHA /= 2
+        CONVERGENCE_THRESHOLD /= 10
