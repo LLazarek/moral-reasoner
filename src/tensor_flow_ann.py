@@ -38,42 +38,29 @@ def train(X_train, y_train, X_test, y_test):
     init = tf.global_variables_initializer()
     sess.run(init)
 
-    last_train_res = [[0, 1]]*X_train.shape[0]
-    last_test_res = [[0, 1]]*X_test.shape[0]
+    last_train_predicted = None
+    last_test_predicted = None
 
     for iteration in range(100):
         for i in range(X_train.shape[0]):
             #print(X_train[i:i+1], y_train[i:i+1])
             sess.run(updates, feed_dict={X: X_train[i: i + 1], y: y_train[i: i + 1]})
 
-        print(sess.run(theta0))
+        # print(sess.run(theta0))
 
-        train_res = np.matrix(sess.run(predict, feed_dict={X: X_train, y: y_train}))
-        train_y_exp = np.matrix(np.argmax(y_train, axis=1)) # Get index of largest value
-        print(train_res)
-        print(train_y_exp)
-        not_same = False
-        for i in range(len(train_res)):
-            print(train_res[i])
-            print(last_train_res[i])
-            if train_res[i][0] == last_train_res[i][0]:
-                not_same = True
-        if not_same:
-            print("Training prediction is not changing")
-        last_train_res = train_res
-        train_accuracy = np.mean(train_y_exp ==
-                                 train_res)
+        train_predicted = np.matrix(sess.run(predict, feed_dict={X: X_train, y: y_train})).T
+        train_expected = np.matrix(np.argmax(y_train, axis=1)) # Get index of largest value
+        if np.array_equal(last_train_predicted, train_predicted):
+            print("Train prediction has not changed!")
+        last_train_predicted = train_predicted
+        train_accuracy = np.mean(np.equal(train_predicted, train_expected))
 
-        test_res = sess.run(predict, feed_dict={X: X_test, y: y_test})
-        not_same = False
-        for i in range(len(test_res)):
-            if test_res[i][0] == last_test_res[i][0]:
-                not_same = True
-        if not_same:
-            print("Testing prediction is not changing")
-        last_test_res = test_res
-        test_accuracy = np.mean(np.argmax(y_test, axis=1) ==
-                                test_res)
+        test_predicted = sess.run(predict, feed_dict={X: X_test, y: y_test})
+        test_expected = np.matrix(np.argmax(y_test, axis=1)) # Get index of largest value
+        if np.array_equal(last_test_predicted, test_predicted):
+            print("Test prediction has not changed!")
+        last_test_predicted = test_predicted
+        test_accuracy = np.mean(np.equal(test_predicted, test_expected))
 
         print("Iteration {}: Train = {}, test = {}".format(iteration, train_accuracy, test_accuracy))
 
