@@ -13,7 +13,7 @@ CHECK_GRADIENT = False
 # Hidden layers: 1
 UNITS_IN_LAYER = [23, 23, 1]
 LAMBDA = 0.001#001
-ALPHA = 0.2
+ALPHA = 0.1
 class Net(namedtuple('Net', ['input', 'hidden', 'output'])):
     @staticmethod
     def empty(input=np.zeros((1, UNITS_IN_LAYER[0]))):
