@@ -8,19 +8,19 @@ from collections import namedtuple
 import numpy as np
 import parser
 
-CHECK_GRADIENT = True
+CHECK_GRADIENT = False
 # Hidden layers: 1
 UNITS_IN_LAYER = [23, 23, 1]
-LAMBDA = 0.#001
+LAMBDA = 0.0001#001
 ALPHA = 0.2
 class Net(namedtuple('Net', ['input', 'hidden', 'output'])):
     @staticmethod
-    def empty(input=np.zeros(UNITS_IN_LAYER[0])):
-        input_with_bias = np.append([1], input)
-        hidden_with_bias = np.append([1], np.zeros(UNITS_IN_LAYER[1]))
+    def empty(input=np.zeros((1, UNITS_IN_LAYER[0]))):
+        input_with_bias = np.append([[1]], input)
+        hidden_with_bias = np.append([[1]], np.zeros((1, UNITS_IN_LAYER[1])))
         return Net(input=input_with_bias,
                    hidden=hidden_with_bias,
-                   output=np.zeros(UNITS_IN_LAYER[-1]))
+                   output=np.zeros((1, UNITS_IN_LAYER[-1])))
 
 
 def sigmoid_value(x):
@@ -32,26 +32,27 @@ def sigmoid(x):
     return sigmoid_matrix(x) if isinstance(x, np.matrix) \
         else sigmoid_value(x)
 
-# theta: n x 1
-# x: m x n
-def h(theta, x):
+# theta: (m x n+1)
+# x: (1 x n+1)
+def h(theta, x): # h: (m x 1)
     return sigmoid(x.dot(theta))
 
 # calc_unit_outputs: Theta Sample -> Net
-# Theta: List[np.matrix[2x3]]
 # Implements forward propogation to calculate the activations of every unit
 # in the net
+# x: (1 x 23), theta[0]: (23 x 24)
 def calc_unit_outputs(theta, x): # Verified
-    assert(x.size == UNITS_IN_LAYER[0])
-    x_with_bias = np.append([1], x)
-    filled = Net.empty(input=x)
-    for h_i in range(1, filled.hidden.size):
-        filled.hidden[h_i] = h(theta[0][h_i - 1,:].T, filled.input)
-
-    for o_i in range(filled.output.size):
-        filled.output[o_i] = h(theta[1][o_i,:].T, filled.hidden)
-
-    return filled
+    assert(len(x) == UNITS_IN_LAYER[0])
+    x_with_bias = np.matrix(np.append([1], x)).T
+    # theta[0]: (23x24)
+    # x_with_bias: (24 x 1)
+    hidden = sigmoid(theta[0]*x_with_bias)
+    # hidden: (23x1)
+    # theta[1]: (1 x 24)
+    hidden_with_bias = np.matrix(np.append([[1]], hidden)).T
+    # hidden_with_bias: (24x1)
+    output = sigmoid(theta[1]*hidden_with_bias)
+    return Net(input=x_with_bias, hidden=hidden_with_bias, output=output)
 
 def cost(theta, X, y): # Verified
     m = len(y)
@@ -77,6 +78,9 @@ def calc_hidden_deltas(theta, activations, output_deltas): # Verified
     # Since there is only one hidden layer, just do that one
     g_prime = np.multiply(activations.hidden, 1 - activations.hidden)
     g_prime[0] = 1 # Otherwise bias always goes to 0
+    # g_prime: (24 x 1)
+    # theta[1]: (1 x 24)
+    # output_deltas: (1 x 1)
     return np.multiply(theta[1].T.dot(output_deltas),
                        g_prime)
 
@@ -86,29 +90,42 @@ def backprop(theta, X, y):
     m = len(y)
 
     # Delta and theta have the same shape
-    Delta = [np.zeros(UNITS_IN_LAYER[1]*(UNITS_IN_LAYER[0] + 1))\
-             .reshape(UNITS_IN_LAYER[1], UNITS_IN_LAYER[0] + 1),
-             np.zeros(UNITS_IN_LAYER[2]*(UNITS_IN_LAYER[1] + 1))\
-             .reshape(UNITS_IN_LAYER[2], UNITS_IN_LAYER[1] + 1)]
+    # theta[0]: (23x24)
+    # theta[1]: (1 x 24)
+    Delta = [np.zeros(theta[0].shape), np.zeros(theta[1].shape)]
+
     for i in range(m):
         # forward propagation
         activations = calc_unit_outputs(theta, X[i])
+        # activations.input: (24 x 1)
+        # activations.hidden: (24 x 1)
+        # activations.output: (1 x 1)
+
         # print("activations: {}".format(activations))
 
         output_deltas = activations.output - y[i]
         output_deltas = np.multiply(output_deltas,
                                     np.multiply(activations.output,
-                                                1 - activations.output)) # Verif
+                                                1 - activations.output))
         output_deltas = np.matrix(output_deltas)
+        # output_deltas: (1 x 1)
+
         # print("o delta: {}".format(output_deltas))
-        
+
         hidden_deltas = calc_hidden_deltas(theta, activations, output_deltas)
+        # hidden_deltas: (24 x 1)
+
         # print("hidden deltas: {}".format(hidden_deltas))
 
-        Delta[1] += output_deltas.dot(np.matrix(activations.hidden)) # Verified
+        Delta[1] += output_deltas.dot(activations.hidden.T)
 
-        hidden_deltas_minus_bias = hidden_deltas[0,1:]
-        Delta[0] += hidden_deltas_minus_bias.T.dot(np.matrix(activations.input)) # Verified
+        # I do this because the hidden layer's bias node's delta
+        # doesn't propagate back to the input layer; Because the hidden
+        # layer's bias node doesn't have any connections to the input
+        # layer
+        hidden_deltas_minus_bias = hidden_deltas[1:,:] # Xinzi: don't do this
+        # hidden_deltas_minus_bias: (23 x 1)
+        Delta[0] += hidden_deltas_minus_bias.dot(activations.input.T)
         # print(Delta)
 
     D = Delta
@@ -118,7 +135,7 @@ def backprop(theta, X, y):
     tmp_theta_0[:,1] = 0
     tmp_theta_1 = copy.deepcopy(theta[1])
     tmp_theta_1[:,1] = 0
-    
+
     D[0] = D[0]/m + LAMBDA*tmp_theta_0
     D[1] = D[1]/m + LAMBDA*tmp_theta_1
 
@@ -189,20 +206,20 @@ def gradient_check(partials, theta, X, y):
 
 def train(X, y):
     np.random.seed(1)
-    theta = [np.random.random((len(X[0]), len(X[0]) + 1)) - 0.5,
-             np.random.random((1,         len(X[0]) + 1)) - 0.5]
+    theta = [np.matrix(np.random.random((len(X[0]), len(X[0]) + 1))) - 0.5,
+             np.matrix(np.random.random((1,         len(X[0]) + 1))) - 0.5]
     optimized_theta = gradient_descent(theta, X, y)
 
     return optimized_theta
 
-def test(theta, X, y):
+def test(theta, X, y, name):
     correct = 0
     for (i, y_i) in enumerate(y):
         output = calc_unit_outputs(theta, X[i]).output
         if int(round(output)) == y_i:
             correct += 1
 
-    print("training accuracy: {}".format(float(correct)/len(y)))
+    print("{} accuracy: {}".format(name, float(correct)/len(y)))
 
 def main():
     print("Loading data...")
@@ -210,4 +227,5 @@ def main():
     (X_test, y_test) = parser.load_test()
     print("Training...")
     theta = train(X_train, y_train)
-    test(theta, X_test, y_test)
+    test(theta, X_train, y_train, "training")
+    test(theta, X_test, y_test, "test")
