@@ -9,6 +9,7 @@ import numpy as np
 import parser
 from datetime import datetime
 
+REPORT_ITERATION = False
 CHECK_GRADIENT = False
 # Hidden layers: 1
 UNITS_IN_LAYER = [23, 23, 1]
@@ -158,9 +159,8 @@ def gradient_descent(theta, X, y):
             exit(1)
 
         count = (count + 1)%REPORT_FREQUENCY
-        if count == 0:
-            print("{}: Iteration".format(datetime.now()))
-            print("Cost: {}\n".format(curr_cost))
+        if REPORT_ITERATION and count == 0:
+            print("{}: Iteration Cost: {}".format(datetime.now(), curr_cost))
         # print("DOING BACKPROP")
         partials = backprop(curr_theta, X, y)
         # print(partials)
@@ -205,10 +205,11 @@ def gradient_check(partials, theta, X, y):
                           "partial {} !~= {}"\
                           .format(l, i, j, partial, gradient))
 
-def train(X, y):
+def train(X, y, initial_theta=None):
     np.random.seed(1)
-    theta = [np.matrix(np.random.random((len(X[0]), len(X[0]) + 1))) - 0.5,
-             np.matrix(np.random.random((1,         len(X[0]) + 1))) - 0.5]
+    theta = initial_theta if initial_theta is not None \
+            else [np.matrix(np.random.random((len(X[0]), len(X[0]) + 1))) - 0.5,
+                  np.matrix(np.random.random((1,         len(X[0]) + 1))) - 0.5]
     optimized_theta = gradient_descent(theta, X, y)
 
     return optimized_theta
@@ -227,6 +228,9 @@ def main():
     (X_train, y_train) = parser.load_training()
     (X_test, y_test) = parser.load_test()
     print("Training...")
-    theta = train(X_train, y_train)
-    test(theta, X_train, y_train, "training")
-    test(theta, X_test, y_test, "test")
+    theta = None
+    for i in range(20):
+        theta = train(X_train, y_train, theta)
+        print("\nEpoch {}".format(i))
+        test(theta, X_train, y_train, "training")
+        test(theta, X_test, y_test, "test")
