@@ -4,6 +4,8 @@ import tensorflow as tf
 import numpy as np
 import parser
 
+NOTIFY_CHANGE = False
+
 LEARN_RATE = 0.12
 
 def forward_propogate(hidden_size, X, theta0, theta1):
@@ -52,14 +54,14 @@ def train(X_train, y_train, X_test, y_test):
 
         train_predicted = np.matrix(sess.run(predict, feed_dict={X: X_train, y: y_train})).T
         train_expected = np.matrix(np.argmax(y_train, axis=1)) # Get index of largest value
-        if np.array_equal(last_train_predicted, train_predicted):
+        if NOTIFY_CHANGE and np.array_equal(last_train_predicted, train_predicted):
             print("Train prediction has not changed!")
         last_train_predicted = train_predicted
         train_accuracy = np.mean(np.equal(train_predicted, train_expected))
 
         test_predicted = sess.run(predict, feed_dict={X: X_test, y: y_test})
         test_expected = np.matrix(np.argmax(y_test, axis=1)) # Get index of largest value
-        if np.array_equal(last_test_predicted, test_predicted):
+        if NOTIFY_CHANGE and np.array_equal(last_test_predicted, test_predicted):
             print("Test prediction has not changed!")
         last_test_predicted = test_predicted
         test_accuracy = np.mean(np.equal(test_predicted, test_expected))
