@@ -7,11 +7,12 @@ import math, copy
 from collections import namedtuple
 import numpy as np
 import parser
+from datetime import datetime
 
 CHECK_GRADIENT = False
 # Hidden layers: 1
 UNITS_IN_LAYER = [23, 23, 1]
-LAMBDA = 0.0001#001
+LAMBDA = 0.001#001
 ALPHA = 0.2
 class Net(namedtuple('Net', ['input', 'hidden', 'output'])):
     @staticmethod
@@ -158,8 +159,8 @@ def gradient_descent(theta, X, y):
 
         count = (count + 1)%REPORT_FREQUENCY
         if count == 0:
-            print("Iteration")
-            print(curr_cost)
+            print("{}: Iteration".format(datetime.now()))
+            print("Cost: {}\n".format(curr_cost))
         # print("DOING BACKPROP")
         partials = backprop(curr_theta, X, y)
         # print(partials)
