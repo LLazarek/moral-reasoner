@@ -4,17 +4,19 @@ import tensorflow as tf
 import numpy as np
 import parser
 
-LEARN_RATE = 0.1
+LEARN_RATE = 0.12
 
 def forward_propogate(hidden_size, X, theta0, theta1):
     biases_hidden = tf.get_variable('biases_hidden', shape=[hidden_size], initializer=tf.constant_initializer(0.1), dtype=tf.float32)
     biases_output = tf.get_variable('biases_output', shape=[2], initializer=tf.constant_initializer(0.1), dtype=tf.float32)
     hidden_activations = tf.nn.sigmoid(tf.nn.bias_add(tf.matmul(X, theta0), biases_hidden))
     return tf.nn.bias_add(tf.matmul(hidden_activations, theta1), biases_output)
+    # hidden_activations = tf.nn.sigmoid(tf.matmul(X, theta0))
+    # return tf.matmul(hidden_activations, theta1)
 
 def train(X_train, y_train, X_test, y_test):
     input_size = X_train.shape[1]
-    hidden_size = 10
+    hidden_size = 15
     y_size = 2
 
     X = tf.placeholder("float", shape=[None, input_size])
