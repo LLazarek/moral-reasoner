@@ -15,7 +15,7 @@ CHECK_GRADIENT = False
 UNITS_IN_LAYER = [23, 23, 1]
 LAMBDA = 0.001#001
 ALPHA = 0.1
-CONVERGENCE_THRESHOLD = 0.000001
+CONVERGENCE_THRESHOLD = 0.0001
 
 class Net(namedtuple('Net', ['input', 'hidden', 'output'])):
     @staticmethod
