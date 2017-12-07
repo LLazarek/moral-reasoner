@@ -99,8 +99,8 @@ def main():
     clf.fit(X_train, y_train.T.flatten())
     train_result = clf.score(X_train, y_train.T.flatten())
     test_result =  clf.score(X_test, y_test.T.flatten())
-    print(train_result)
-    print(test_result)
+    print("train: {}".format(train_result))
+    print("test: {}".format(test_result))
     exit(1)
 
 
