@@ -33,16 +33,12 @@ def normalize(data):
             "n":0.5,
             "y":0
         },
-        "control_perpetrator":{
-            "y":0.2,
-            "n":0
+        "plan_known":{
+            "y":1,
+            "n":0.2
         },
         "plan_include_harm":{
-            "y":0.99,
-            "n":0
-        },
-        "sufficient_for_harm":{
-            "y":0.7,
+            "y":1,
             "n":0
         },
         "severity_harm":{
@@ -52,9 +48,9 @@ def normalize(data):
             3:0.8,
             4:1
         },
-        "benefit_protagonist":{
-            "y":0.5,
-            "n":0
+        "goal_outweigh_harm":{
+            "n":.6,
+            "y":.2
         }
     }
     yes_no = {"y": 1, "n": 0}
