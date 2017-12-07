@@ -6,7 +6,7 @@ import parser
 
 NOTIFY_CHANGE = False
 
-LEARN_RATE = 0.12
+LEARN_RATE = 0.15
 
 def forward_propogate(hidden_size, X, theta0, theta1):
     biases_hidden = tf.get_variable('biases_hidden', shape=[hidden_size], initializer=tf.constant_initializer(0.1), dtype=tf.float32)
@@ -18,7 +18,7 @@ def forward_propogate(hidden_size, X, theta0, theta1):
 
 def train(X_train, y_train, X_test, y_test):
     input_size = X_train.shape[1]
-    hidden_size = input_size
+    hidden_size = 15
     y_size = 1
 
     X = tf.placeholder("float", shape=[None, input_size])
