@@ -12,18 +12,49 @@ def normalize(data):
     normalizers = {
         "mental_state":{
             "neither": 0,
-            "negligent": 1,
-            "reckless":2,
-            "intend":3
+            "negligent": 0.4,
+            "reckless":0.7,
+            "intend":0.99
         },
         "foreseeability":{
             "n":0,
-            "low":1,
-            "high":2
+            "low":0.3,
+            "high":0.8
         },
         "verdict":{
             "not guilty":0,
             "guilty":1
+        },
+        "produce_harm":{
+            "n":0,
+            "y":0.8
+        },
+        "careful":{
+            "n":0.5,
+            "y":0
+        },
+        "control_perpetrator":{
+            "y":0.2,
+            "n":0
+        },
+        "plan_include_harm":{
+            "y":0.99,
+            "n":0
+        },
+        "sufficient_for_harm":{
+            "y":0.7,
+            "n":0
+        },
+        "severity_harm":{
+            0:0,
+            1:0.2,
+            2:0.5,
+            3:0.8,
+            4:1
+        },
+        "benefit_protagonist":{
+            "y":0.5,
+            "n":0
         }
     }
     yes_no = {"y": 1, "n": 0}
@@ -59,6 +90,7 @@ def to_matrix(json_data):
         values = map(lambda item: item[1], sorted_factors)
         X.append(list(values))
 
-    shuffle(X)
-    shuffle(y)
-    return (np.array(X), np.array(y))
+    zipped = list(zip(X, y))
+    shuffle(zipped)
+    X, y = zip(*zipped)
+    return (np.array(list(X)), np.array(list(y)))
