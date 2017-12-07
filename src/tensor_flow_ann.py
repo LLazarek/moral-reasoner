@@ -80,13 +80,29 @@ def main():
     temp = np.ones((m, n + 1))
     temp[:,1:] = X_train
     X_train = temp
-    
+
     (X_test, y_test) = parser.load_test()
     # Add bias column
     (m, n) = X_test.shape
     temp = np.ones((m, n + 1))
     temp[:,1:] = X_test
     X_test = temp
+
+
+
+
+    from sklearn import linear_model
+    # from sklearn.ensemble import GradientBoostingClassifier
+
+    # clf = GradientBoostingClassifier()
+    clf = linear_model.LogisticRegression()
+    clf.fit(X_train, y_train.T.flatten())
+    train_result = clf.score(X_train, y_train.T.flatten())
+    test_result =  clf.score(X_test, y_test.T.flatten())
+    print(train_result)
+    print(test_result)
+    exit(1)
+
 
     y_train = tf.Session().run(tf.one_hot(y_train, 2))
     y_train = np.matrix(list(map(lambda x: x[0].tolist(), y_train)))
