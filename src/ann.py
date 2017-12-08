@@ -13,8 +13,8 @@ REPORT_ITERATION = False
 CHECK_GRADIENT = False
 # Hidden layers: 1
 UNITS_IN_LAYER = [23, 23, 1]
-LAMBDA = 0.001#001
-ALPHA = 0.1
+LAMBDA = 0.00025
+ALPHA = 0.15
 CONVERGENCE_THRESHOLD = 0.0001
 
 class Net(namedtuple('Net', ['input', 'hidden', 'output'])):
