@@ -53,7 +53,7 @@ def normalize(data):
             "y":.2
         }
     }
-    yes_no = {"y": 1, "n": 0}
+    yes_no = {"y": 0.25, "n": 0}
     return [{factor: normalizers.get(factor, yes_no).get(value, value)
              for (factor, value) in case.items()}
             for case in data]
