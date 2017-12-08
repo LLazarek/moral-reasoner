@@ -92,18 +92,18 @@ def main():
 
 
 
-    # from sklearn import linear_model
-    # # from sklearn.ensemble import GradientBoostingClassifier
+    from sklearn import linear_model
+    # from sklearn.ensemble import GradientBoostingClassifier
 
-    # # clf = GradientBoostingClassifier()
-    # clf = linear_model.LogisticRegression()
-    # # clf = linear_model.LinearRegression()
-    # clf.fit(X_train, y_train.T.flatten())
-    # train_result = clf.score(X_train, y_train.T.flatten())
-    # test_result =  clf.score(X_test, y_test.T.flatten())
-    # print("train: {}".format(train_result))
-    # print("test: {}".format(test_result))
-    # exit(1)
+    # clf = GradientBoostingClassifier()
+    clf = linear_model.LogisticRegression()
+    # clf = linear_model.LinearRegression()
+    clf.fit(X_train, y_train.T.flatten())
+    train_result = clf.score(X_train, y_train.T.flatten())
+    test_result =  clf.score(X_test, y_test.T.flatten())
+    print("train: {}".format(train_result))
+    print("test: {}".format(test_result))
+    exit(1)
 
 
     # y_train = tf.Session().run(tf.one_hot(y_train, 2))
